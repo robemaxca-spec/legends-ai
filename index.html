@@ -1,36 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Legends AI - Einstein & Tesla</title>
-    <style>
-        body { margin:0; height:100vh; background:linear-gradient(135deg,#0a0a23,#1a1a3e); color:white; font-family:Arial; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
-        h1 { font-size:3.5rem; margin-bottom:20px; }
-        .cards { display:flex; gap:50px; flex-wrap:wrap; justify-content:center; }
-        .card { background:rgba(255,255,255,0.08); padding:40px; border-radius:25px; width:320px; cursor:pointer; transition:0.4s; box-shadow:0 0 30px rgba(0,255,255,0.4); }
-        .card:hover { transform:translateY(-20px); box-shadow:0 0 60px rgba(0,255,255,0.8); }
-        .card h2 { font-size:2rem; margin:20px 0; }
-        button { padding:15px 40px; font-size:1.3rem; background:#00eaff; border:none; border-radius:50px; cursor:pointer; }
-        button:hover { background:#00ffd5; }
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legends AI – Real Roast & Handoff</title>
+<style>
+  body{font-family:Arial;background:#0a0a1f;color:#fff;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;}
+  .container{max-width:900px;width:100%;padding:20px;}
+  .agents{display:flex;gap:30px;justify-content:center;margin-bottom:40px;}
+  .agent{border:3px solid #00ffff;border-radius:20px;padding:20px;text-align:center;cursor:pointer;transition:0.3s;box-shadow:0 0 30px #00ffff;}
+  .agent:hover{transform:scale(1.1);box-shadow:0 0 60px #00ffff;}
+  .chat{display:none;flex-direction:column;background:rgba(0,255,255,0.1);border-radius:20px;padding:20px;height:70vh;}
+  .messages{flex:1;overflow-y:auto;margin-bottom:20px;padding:10px;}
+  .msg{padding:12px 20px;border-radius:15px;margin:10px 0;max-width:80%;word-wrap:break-word;}
+  .user{background:#00ffff;color:#000;align-self:flex-end;}
+  .bot{background:#333;align-self:flex-start;}
+  .input-area{display:flex;gap:10px;}
+  input,button{flex:1;padding:15px;border-radius:50px;}
+  input{background:#222;color:#fff;border:none;}
+  button{background:#00ffff;color:#000;border:none;font-weight:bold;cursor:pointer;}
+  .roast{color:#ff6b6b;font-style:italic;animation:shake 0.5s;}
+  @keyframes shake{0%,100%{transform:translateX(0)}50%{transform:translateX(10px)}}
+</style>
 </head>
 <body>
-    <h1>Legends AI</h1>
-    <p style="font-size:1.6rem; margin-bottom:40px;">Apna Genius Agent Chuno</p>
+<div class="container">
+  <h1 style="font-size:3rem;text-align:center;">Legends AI ⚡️</h1>
+  <div class="agents">
+    <div class="agent" onclick="startChat('einstein')">Einstein<br><small>Sarcastic Genius</small></div>
+    <div class="agent" onclick="startChat('tesla')">Tesla<br><small>Bijli Ka Jadoogar</small></div>
+  </div>
 
-    <div class="cards">
-        <div class="card" onclick="location.href='?agent=einstein'">
-            <h2>Albert Einstein</h2>
-            <p>Data • Strategy • Sarcastic Genius</p>
-            <button>Talk to Einstein</button>
-        </div>
-
-        <div class="card" onclick="location.href='?agent=tesla'">
-            <h2>Nikola Tesla</h2>
-            <p>Automation • Tech • Bijli Ka Jadoo</p>
-            <button>Talk to Tesla</button>
-        </div>
+  <div id="chat" class="chat">
+    <div id="messages" class="messages"></div>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Yahan likho ya mic se bolo..." onkeypress="if(event.key==='Enter')send()">
+      <button onclick="send()">Send</button>
     </div>
+  </div>
+</div>
+
+<script>
+let current = 'einstein';
+const replies = {
+  einstein: ["Achha, yeh to relativity se bhi complicated lag raha hai…", 
+             "Main equations likh sakta hoon, lekin automation nahi. Tesla ko bula raha hoon!"],
+  tesla: ["Einstein ne bheja? Woh sirf theory banata hai, main cheezain banata hoon!", 
+          "Onboarding 2 minute mein fix — Zapier + Loom + Notion template. Bijli ki tarah fast!"]
+};
+
+function startChat(agent){
+  current = agent;
+  document.querySelector('.agents').style.display='none';
+  document.getElementById('chat').style.display='flex';
+  addMsg('bot', `Salam! Main ${agent==='einstein'?'Albert Einstein':'Nikola Tesla'} hoon. Kya masla hai?`);
+}
+
+function addMsg(type, text){
+  const div = document.createElement('div');
+  div.className = 'msg ' + (type==='user'?'user':'bot');
+  if(text.includes('bula raha')) div.className += ' roast';
+  div.innerHTML = text;
+  document.getElementById('messages').appendChild(div);
+  div.scrollIntoView();
+}
+
+function send(){
+  const input = document.getElementById('userInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  addMsg('user', msg);
+  input.value = '';
+
+  setTimeout(()=>{
+    if(current==='einstein' && (msg.toLowerCase().includes('onboard') || msg.includes('signup') || msg.includes('automatic'))){
+      addMsg('bot', replies.einstein[1]);
+      setTimeout(()=>{ current='tesla'; addMsg('bot', replies.tesla[0]); addMsg('bot', replies.tesla[1]); }, 2000);
+    } else {
+      addMsg('bot', replies[current][0]);
+    }
+  }, 1000);
+}
+</script>
 </body>
 </html>
