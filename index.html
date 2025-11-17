@@ -1,85 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Legends AI – Real Roast & Handoff</title>
-<style>
-  body{font-family:Arial;background:#0a0a1f;color:#fff;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;}
-  .container{max-width:900px;width:100%;padding:20px;}
-  .agents{display:flex;gap:30px;justify-content:center;margin-bottom:40px;}
-  .agent{border:3px solid #00ffff;border-radius:20px;padding:20px;text-align:center;cursor:pointer;transition:0.3s;box-shadow:0 0 30px #00ffff;}
-  .agent:hover{transform:scale(1.1);box-shadow:0 0 60px #00ffff;}
-  .chat{display:none;flex-direction:column;background:rgba(0,255,255,0.1);border-radius:20px;padding:20px;height:70vh;}
-  .messages{flex:1;overflow-y:auto;margin-bottom:20px;padding:10px;}
-  .msg{padding:12px 20px;border-radius:15px;margin:10px 0;max-width:80%;word-wrap:break-word;}
-  .user{background:#00ffff;color:#000;align-self:flex-end;}
-  .bot{background:#333;align-self:flex-start;}
-  .input-area{display:flex;gap:10px;}
-  input,button{flex:1;padding:15px;border-radius:50px;}
-  input{background:#222;color:#fff;border:none;}
-  button{background:#00ffff;color:#000;border:none;font-weight:bold;cursor:pointer;}
-  .roast{color:#ff6b6b;font-style:italic;animation:shake 0.5s;}
-  @keyframes shake{0%,100%{transform:translateX(0)}50%{transform:translateX(10px)}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legends AI - Advanced Roast & Handoff</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; background: linear-gradient(135deg, #0a0a1f 0%, #1a1a3e 100%); color: white; font-family: 'Arial', sans-serif; overflow: hidden; }
+        #container { position: relative; width: 100vw; height: 100vh; }
+        #three-canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        .ui-overlay { position: absolute; top: 0; left: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; }
+        .agent-selector { pointer-events: all; text-align: center; padding: 50px; }
+        .agent-card { display: inline-block; background: rgba(255,255,255,0.1); border: 2px solid #00ffff; border-radius: 20px; padding: 30px; margin: 20px; cursor: pointer; transition: all 0.3s; }
+        .agent-card:hover { box-shadow: 0 0 30px #00ffff; transform: scale(1.05); }
+        .chat-container { pointer-events: all; display: none; flex-direction: column; height: 100vh; }
+        #chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: rgba(0,0,0,0.5); margin: 20px; border-radius: 10px; }
+        .message { margin: 10px 0; padding: 15px; border-radius: 20px; max-width: 80%; word-wrap: break-word; }
+        .user { background: #00ffff; color: #000; align-self: flex-end; }
+        .bot { background: #333; align-self: flex-start; }
+        .input-area { pointer-events: all; padding: 20px; background: rgba(0,0,0,0.5); display: flex; }
+        .input-area input { flex: 1; padding: 15px; border: none; border-radius: 25px; background: #222; color: white; }
+        .input-area button { padding: 15px 25px; background: #00ffff; color: #000; border: none; border-radius: 25px; margin-left: 10px; cursor: pointer; }
+        .roast { animation: shake 0.5s, flash 0.3s 3; color: #ff6b6b; font-weight: bold; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        @keyframes flash { 0%, 100% { background: #ff0000; } 50% { background: #ffff00; } }
+        .lightning { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #ffff00, transparent); animation: lightning 0.2s; z-index: 10; display: none; }
+        @keyframes lightning { 0% { opacity: 1; } 100% { opacity: 0; } }
+        .hand-off { animation: slide-in 0.5s; }
+        @keyframes slide-in { 0% { transform: translateX(100%); } 100% { transform: translateX(0); } }
+    </style>
 </head>
 <body>
-<div class="container">
-  <h1 style="font-size:3rem;text-align:center;">Legends AI ⚡️</h1>
-  <div class="agents">
-    <div class="agent" onclick="startChat('einstein')">Einstein<br><small>Sarcastic Genius</small></div>
-    <div class="agent" onclick="startChat('tesla')">Tesla<br><small>Bijli Ka Jadoogar</small></div>
-  </div>
-
-  <div id="chat" class="chat">
-    <div id="messages" class="messages"></div>
-    <div class="input-area">
-      <input type="text" id="userInput" placeholder="Yahan likho ya mic se bolo..." onkeypress="if(event.key==='Enter')send()">
-      <button onclick="send()">Send</button>
+    <div id="container">
+        <canvas id="three-canvas"></canvas>
+        <div class="ui-overlay">
+            <div class="agent-selector">
+                <h1>Legends AI ⚡️</h1>
+                <div class="agent-card" onclick="startChat('einstein')">
+                    <h2>Albert Einstein</h2>
+                    <p>Sarcastic Data Genius</p>
+                </div>
+                <div class="agent-card" onclick="startChat('tesla')">
+                    <h2>Nikola Tesla</h2>
+                    <p>Dramatic Automation Wizard</p>
+                </div>
+            </div>
+            <div id="chat-container" class="chat-container">
+                <div id="agent-title"></div>
+                <div id="chat-messages"></div>
+                <div class="input-area">
+                    <input type="text" id="user-input" placeholder="Ask in any language..." onkeypress="if(event.key==='Enter')sendMessage()">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+            <div id="lightning" class="lightning"></div>
+        </div>
     </div>
-  </div>
-</div>
 
-<script>
-let current = 'einstein';
-const replies = {
-  einstein: ["Achha, yeh to relativity se bhi complicated lag raha hai…", 
-             "Main equations likh sakta hoon, lekin automation nahi. Tesla ko bula raha hoon!"],
-  tesla: ["Einstein ne bheja? Woh sirf theory banata hai, main cheezain banata hoon!", 
-          "Onboarding 2 minute mein fix — Zapier + Loom + Notion template. Bijli ki tarah fast!"]
-};
+    <script>
+        let currentAgent = '';
+        let scene, camera, renderer, model;
 
-function startChat(agent){
-  current = agent;
-  document.querySelector('.agents').style.display='none';
-  document.getElementById('chat').style.display='flex';
-  addMsg('bot', `Salam! Main ${agent==='einstein'?'Albert Einstein':'Nikola Tesla'} hoon. Kya masla hai?`);
-}
+        // Three.js 3D Setup for Tesla (simple animated head)
+        function init3D() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-canvas'), alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
 
-function addMsg(type, text){
-  const div = document.createElement('div');
-  div.className = 'msg ' + (type==='user'?'user':'bot');
-  if(text.includes('bula raha')) div.className += ' roast';
-  div.innerHTML = text;
-  document.getElementById('messages').appendChild(div);
-  div.scrollIntoView();
-}
+            // Simple 3D head (sphere with mustache texture simulation)
+            const geometry = new THREE.SphereGeometry(1, 32, 32);
+            const material = new THREE.MeshBasicMaterial({ color: 0xffdbac, wireframe: false });
+            model = new THREE.Mesh(geometry, material);
+            scene.add(model);
+            camera.position.z = 5;
 
-function send(){
-  const input = document.getElementById('userInput');
-  const msg = input.value.trim();
-  if(!msg) return;
-  addMsg('user', msg);
-  input.value = '';
+            animate();
+        }
 
-  setTimeout(()=>{
-    if(current==='einstein' && (msg.toLowerCase().includes('onboard') || msg.includes('signup') || msg.includes('automatic'))){
-      addMsg('bot', replies.einstein[1]);
-      setTimeout(()=>{ current='tesla'; addMsg('bot', replies.tesla[0]); addMsg('bot', replies.tesla[1]); }, 2000);
-    } else {
-      addMsg('bot', replies[current][0]);
-    }
-  }, 1000);
-}
-</script>
+        function animate() {
+            requestAnimationFrame(animate);
+            model.rotation.y += 0.01;
+            renderer.render(scene, camera);
+        }
+
+        // Chat Logic
+        const agents = {
+            einstein: {
+                name: 'Albert Einstein',
+                responses: [
+                    'Achha, yeh to relativity se bhi complicated lag raha hai… Main equations likh sakta hoon, lekin automation nahi. Tesla ko bula raha hoon! <span class="roast">Woh bijli paida karta hai, main sirf samjhata hoon!</span>'
+                ]
+            },
+            tesla: {
+                name: 'Nikola Tesla',
+                responses: [
+                    'Einstein ne bheja? Woh sirf theory banata hai, main cheezain banata hoon! Onboarding 2 minute mein fix — Zapier + Loom + Notion template. Bijli ki tarah fast!'
+                ]
+            }
+        };
+
+        function startChat(agent) {
+            currentAgent = agent;
+            document.querySelector('.agent-selector').style.display = 'none';
+            document.getElementById('chat-container').style.display = 'flex';
+            document.getElementById('agent-title').innerText = agents[agent].name;
+            addMessage('bot', `Salam! Main ${agents[agent].name} hoon. Kya masla hai?`);
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            if (!message) return;
+            addMessage('user', message);
+            input.value = '';
+
+            setTimeout(() => {
+                if (currentAgent === 'einstein' && (message.toLowerCase().includes('onboard') || message.includes('automatic') || message.includes('signups'))) {
+                    addMessage('bot', agents.einstein.responses[0]);
+                    showLightning();
+                    setTimeout(() => {
+                        currentAgent = 'tesla';
+                        document.getElementById('agent-title').innerText = agents.tesla.name;
+                        addMessage('bot', agents.tesla.responses[0]);
+                    }, 2000);
+                } else {
+                    addMessage('bot', agents[currentAgent].responses[Math.floor(Math.random() * agents[currentAgent].responses.length)]);
+                }
+            }, 1000);
+        }
+
+        function addMessage(sender, text) {
+            const messages = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerHTML = text;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function showLightning() {
+            const lightning = document.getElementById('lightning');
+            lightning.style.display = 'block';
+            setTimeout(() => lightning.style.display = 'none', 600);
+        }
+
+        // Init 3D
+        init3D();
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>
